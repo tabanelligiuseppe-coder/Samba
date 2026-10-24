@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Samba ⚽ Coach Planner</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2b6cb0">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f0f4f8; color: #2d3748; padding-bottom: 80px; }
+  
+  /* HEADER CON LOGO CENTRATO */
+  .header { background: #2b6cb0; color: #fff; padding: 16px; text-align: center; border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .header-logo { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 3px solid #fff; margin-bottom: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+  .header h1 { font-size: 1.4rem; margin-bottom: 2px; }
+  .header p { font-size: 0.85rem; opacity: 0.9; }
+  
+  .container { max-width: 600px; margin: 0 auto; padding: 0 16px; }
+  .tabs { display: flex; background: #fff; border-radius: 12px; padding: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 16px; }
+  .tabs button { flex: 1; padding: 10px; border: none; background: transparent; font-size: 0.9rem; font-weight: 600; color: #718096; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+  .tabs button.active { background: #2b6cb0; color: #fff; box-shadow: 0 2px 4px rgba(43,108,176,0.3); }
+  .tab-content { display: none; animation: fadeIn 0.3s; }
+  .tab-content.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+  
+  /* Note Rapide */
+  .note-rapide { background: #fefcbf; border-left: 4px solid #ecc94b; border-radius: 8px; padding: 12px; margin-bottom: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+  .note-rapide label { font-size: 0.8rem; font-weight: 700; color: #744210; display: block; margin-bottom: 4px; }
+  .note-rapide textarea { width: 100%; background: transparent; border: none; font-family: inherit; font-size: 0.95rem; color: #744210; resize: none; outline: none; min-height: 40px; }
+  .note-rapide textarea::placeholder { color: #b7791f; opacity: 0.7; }
+
+  .card { background: #fff; border-radius: 12px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); overflow: hidden; display: flex; flex-direction: column; cursor: pointer; transition: all 0.2s; }
+  .card:active { transform: scale(0.99); }
+  
+  .scheda-header { padding: 16px; display: flex; justify-content: space-between; align-items: center; }
+  .scheda-info { flex: 1; }
+  .scheda-title { font-size: 1.15rem; font-weight: 700; color: #1a202c; margin-bottom: 4px; }
+  .scheda-sub { font-size: 0.85rem; color: #718096; }
+  
+  .scheda-contenuto { display: none; padding: 0 16px 16px 16px; border-top: 1px solid #edf2f7; background: #fafafa; }
+  .card.open .scheda-contenuto { display: block; animation: slideDown 0.2s ease-out; }
+  @keyframes slideDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+  
+  .card-header-fase { padding: 8px 12px; color: #fff; display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 0.9rem; border-radius: 6px; margin-top: 12px; margin-bottom: 8px; }
+  .bg-blu { background: #3182ce; }
+  .bg-verde { background: #38a169; }
+  .bg-rosso { background: #e53e3e; }
+
+  .tags-container { display: flex; flex-direction: row; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .tag { background: #edf2f7; border-radius: 20px; padding: 6px 12px; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 4px; }
+  .tag span { font-size: 1.1rem; }
+
+  .step-item { display: flex; align-items: center; gap: 10px; padding: 6px 0; cursor: pointer; }
+  .step-check { width: 22px; height: 22px; border: 2px solid #cbd5e0; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; background: #fff; }
+  .step-check.done { background: #38a169; border-color: #38a169; color: white; }
+  .step-text { font-size: 0.9rem; padding-top: 2px; white-space: pre-wrap; flex: 1; }
+  .step-text.done { text-decoration: line-through; color: #a0aec0; }
+  
+  /* Timer nella scheda */
+  .timer-wrapper { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+  .btn-timer { background: #edf2f7; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 700; color: #2d3748; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+  .btn-timer.active { background: #e53e3e; color: white; animation: pulse 1s infinite; }
+  @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: #4a5568; margin-bottom: 4px; }
+  .form-group input[type="text"], .form-group input[type="date"], .form-group input[type="time"], .form-group input[type="number"], .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 0.95rem; font-family: inherit; }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #2b6cb0; box-shadow: 0 0 0 2px rgba(43,108,176,0.2); }
+  .form-group textarea { resize: none; overflow: hidden; min-height: 45px; }
+  
+  .input-row { display: flex; gap: 8px; align-items: flex-start; }
+  .input-row textarea { flex: 1; }
+  .input-row input[type="number"] { width: 70px; text-align: center; }
+
+  .btn { width: 100%; padding: 14px; border: none; border-radius: 10px; font-size: 1rem; font-weight: 700; color: #fff; background: #38a169; cursor: pointer; margin-top: 8px; }
+  .btn-blue { background: #3182ce; }
+  .btn-small { padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; }
+  .btn-reset { background: #edf2f7; color: #4a5568; margin-top: 16px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  
+  .scheda-actions { display: flex; gap: 8px; padding: 8px 16px 16px 16px; justify-content: flex-end; border-top: 1px solid #edf2f7; background: #fafafa; }
+  .scheda-actions button { background: #e2e8f0; color: #4a5568; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+  
+  .empty { text-align: center; padding: 40px 20px; color: #a0aec0; font-size: 0.95rem; }
+  .fab { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; border-radius: 50%; background: #38a169; color: white; font-size: 2rem; display: flex; align-items: center; justify-content: center; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.2); cursor: pointer; z-index: 10; }
+  
+  .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; padding: 16px; }
+  .modal.active { display: flex; }
+  .modal-content { background: #fff; border-radius: 16px; padding: 20px; width: 100%; max-width: 600px; max-height: 95vh; overflow-y: auto; }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .modal-header h2 { font-size: 1.2rem; }
+  .close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #a0aec0; }
+  
+  .emoji-picker { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .emoji-opt { font-size: 1.5rem; padding: 8px; border: 2px solid #cbd5e0; border-radius: 8px; background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 45px; height: 45px; }
+  .emoji-opt.selected { border-color: #3182ce; background: #ebf8ff; }
+
+  .tag-selector { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+  .tag-btn { padding: 6px 10px; border: 2px solid #cbd5e0; border-radius: 16px; background: #fff; cursor: pointer; font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 4px; }
+  .tag-btn.selected { border-color: #3182ce; background: #ebf8ff; color: #2b6cb0; }
+  .tag-btn span { font-size: 1rem; }
+
+  .action-btn { background: none; border: none; font-size: 1.3rem; cursor: pointer; padding: 8px; }
+  .delete-btn { color: #e53e3e; }
+  .edit-btn { color: #3182ce; }
+</style>
+</head>
+<body>
+
+<!-- HEADER CON LOGO -->
+<div class="header">
+  <img src="logo.png" alt="Samba Logo" class="header-logo" onerror="this.style.display='none'">
+  <h1>Samba</h1>
+  <p>Coach Planner</p>
+</div>
+
+<div class="container">
+  <div class="tabs">
+    <button id="tabCalendario" class="active" onclick="switchTab('calendario')">📅 Calendario</button>
+    <button id="tabSchede" onclick="switchTab('schede')">📋 Schede</button>
+  </div>
+
+  <div id="contentCalendario" class="tab-content active">
+    <!-- NOTE RAPIDE -->
+    <div class="note-rapide">
+      <label>📝 Note Rapide (promemoria per oggi)</label>
+      <textarea id="noteRapide" placeholder="Es. Portare i coni nuovi, controllare le borracce..." oninput="salvaNote()"></textarea>
+    </div>
+
+    <div id="listaCalendario"></div>
+    <div class="empty" id="emptyCalendario">Nessun evento. Aggiungi il primo allenamento!</div>
+  </div>
+
+  <div id="contentSchede" class="tab-content">
+    <div id="listaSchede"></div>
+    <div class="empty" id="emptySchede">Nessuna scheda. Crea la prima scheda!</div>
+  </div>
+</div>
+
+<button class="fab" onclick="apriModale()">+</button>
+
+<div class="modal" id="modale">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="modaleTitolo">Nuovo Elemento</h2>
+      <button class="close-btn" onclick="chiudiModale()">×</button>
+    </div>
+    
+    <div class="form-group">
+      <label>Tipo</label>
+      <select id="tipoInput" onchange="cambiaTipo()">
+        <option value="evento">📅 Evento / Allenamento</option>
+        <option value="scheda">📋 Scheda di Allenamento</option>
+      </select>
+    </div>
+
+    <!-- EVENTO -->
+    <div id="campiEvento">
+      <div class="form-group">
+        <label>Icona Evento</label>
+        <div class="emoji-picker" id="pickerEvento"></div>
+      </div>
+      <div class="form-group">
+        <label>Titolo</label>
+        <input type="text" id="titoloEvento" placeholder="Es. Partita amichevole">
+      </div>
+      <div class="form-group">
+        <label>Data</label>
+        <input type="date" id="dataEvento">
+      </div>
+      <div class="form-group">
+        <label>Ora</label>
+        <input type="time" id="oraEvento">
+      </div>
+      <div class="form-group">
+        <label>Luogo</label>
+        <input type="text" id="luogoEvento" placeholder="Es. Campo Comunale">
+      </div>
+    </div>
+
+    <!-- SCHEDA -->
+    <div id="campiScheda" style="display:none;">
+      <div class="form-group">
+        <label>Titolo Scheda</label>
+        <input type="text" id="titoloScheda" placeholder="Es. Allenamento del Martedì">
+      </div>
+
+      <!-- Fase 1 -->
+      <div class="form-group">
+        <label>1. Riscaldamento: Corsa 🏃</label>
+        <div class="input-row">
+          <textarea id="corsa" rows="1" placeholder="Es. 2 giri del campo"></textarea>
+          <input type="number" id="timerCorsa" placeholder="Min" min="0" max="60" title="Minuti">
+        </div>
+      </div>
+
+      <!-- Fase 2 -->
+      <div class="form-group">
+        <label>2. Stretching 🧘</label>
+        <div class="input-row">
+          <textarea id="stretching" rows="1" placeholder="Es. Allungamento gambe"></textarea>
+          <input type="number" id="timerStretching" placeholder="Min" min="0" max="60" title="Minuti">
+        </div>
+      </div>
+
+      <!-- Fase 3 -->
+      <div class="form-group">
+        <label>3. Coordinazione senza palla 🤸</label>
+        <div class="input-row">
+          <textarea id="coordNoPalla" rows="1" placeholder="Es. Saltelli tra i cerchi"></textarea>
+          <input type="number" id="timerCoordNoPalla" placeholder="Min" min="0" max="60" title="Minuti">
+        </div>
+      </div>
+
+      <!-- Fase 4 -->
+      <div class="form-group">
+        <label>4. Coordinazione con palla ⚽</label>
+        <div class="input-row">
+          <textarea id="coordPalla" rows="1" placeholder="Es. Slalom tra i coni"></textarea>
+          <input type="number" id="timerCoordPalla" placeholder="Min" min="0" max="60" title="Minuti">
+        </div>
+      </div>
+
+      <!-- Fase 5 -->
+      <div class="form-group">
+        <label>5. Esercizi col pallone 🎯</label>
+        <div class="input-row">
+          <textarea id="esercizi" rows="1" placeholder="Es. Tiri in porta"></textarea>
+          <input type="number" id="timerEsercizi" placeholder="Min" min="0" max="60" title="Minuti">
+        </div>
+      </div>
+
+      <!-- Fase 6 -->
+      <div class="form-group">
+        <label>6. Partitella 🏆</label>
+        <div class="input-row">
+          <textarea id="partitella" rows="1" placeholder="Es. 3 vs 3 a metà campo"></textarea>
+          <input type="number" id="timerPartitella" placeholder="Min" min="0" max="60" title="Minuti">
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label>Pittogrammi per la scheda</label>
+        <div class="tag-selector" id="tagSelector"></div>
+      </div>
+
+      <div class="form-group">
+        <label>Immagine (opzionale)</label>
+        <input type="file" id="imgScheda" accept="image/*" onchange="anteprimaImmagine(event)">
+        <img id="previewScheda" style="width:100%; height:80px; object-fit:cover; border-radius:8px; margin-top:8px; display:none;">
+      </div>
+    </div>
+
+    <button class="btn btn-blue" onclick="salvaElemento()" id="btnSalva">Salva</button>
+  </div>
+</div>
+
+<script>
+  let eventi = JSON.parse(localStorage.getItem("coachEventi") || "[]");
+  let schede = JSON.parse(localStorage.getItem("coachSchede") || "[]");
+  
+  let immagineBase64 = null;
+  let tagSelezionati = [];
+  let emojiEventoScelta = "⚽";
+  
+  let idInModifica = null;
+  let tipoInModifica = null;
+
+  const EMOJI_EVENTI = ["⚽", "🏆", "🏃", "🥅", "🏟️", "📅", "🚑", "🎉", "🥇", "🛑"];
+  const TAG_DISPONIBILI = [
+    { emoji: "🏃", nome: "Corsa" }, { emoji: "🧘", nome: "Stretching" },
+    { emoji: "🤸", nome: "Coord. senza palla" }, { emoji: "⚽", nome: "Coord. con palla" },
+    { emoji: "🎯", nome: "Tiro" }, { emoji: "🤝", nome: "Passaggio" }, 
+    { emoji: "1️⃣", nome: "Uno-Due" }, { emoji: "💥", nome: "Colpo di testa" },
+    { emoji: "🛑", nome: "Stop" }, { emoji: "🚩", nome: "Slalom" },
+    { emoji: "🤸", nome: "Salto" }, { emoji: "🛡️", nome: "Difesa" }, 
+    { emoji: "🏆", nome: "Partitella" }, { emoji: "⏱️", nome: "Tempo" },
+    { emoji: "🚰", nome: "Pausa" }
+  ];
+
+  // ===== NOTE RAPIDE =====
+  const noteRapideEl = document.getElementById("noteRapide");
+  noteRapideEl.value = localStorage.getItem("coachNoteRapide") || "";
+  function salvaNote() {
+    localStorage.setItem("coachNoteRapide", noteRapideEl.value);
+    autoResize(noteRapideEl);
+  }
+  noteRapideEl.addEventListener("input", salvaNote);
+
+  function autoResize(textarea) {
+    textarea.style.height = 'auto';
+    textarea.style.height = textarea.scrollHeight + 'px';
+  }
+
+  function save() {
+    localStorage.setItem("coachEventi", JSON.stringify(eventi));
+    localStorage.setItem("coachSchede", JSON.stringify(schede));
+  }
+
+  function switchTab(tab) {
+    document.querySelectorAll(".tab-content").forEach(x => x.classList.remove("active"));
+    document.querySelectorAll(".tabs button").forEach(x => x.classList.remove("active"));
+    document.getElementById("content" + (tab === "calendario" ? "Calendario" : "Schede")).classList.add("active");
+    document.getElementById("tab" + (tab === "calendario" ? "Calendario" : "Schede")).classList.add("active");
+  }
+
+  function apriModale(id = null, tipo = null) {
+    idInModifica = id;
+    tipoInModifica = tipo;
+    
+    document.getElementById("modale").classList.add("active");
+    
+    if (id && tipo) {
+      document.getElementById("tipoInput").value = tipo;
+      cambiaTipo();
+      document.getElementById("modaleTitolo").textContent = tipo === "evento" ? "Modifica Evento" : "Modifica Scheda";
+      document.getElementById("btnSalva").textContent = "Salva Modifiche";
+      
+      if (tipo === "evento") {
+        const ev = eventi.find(e => e.id === id);
+        if (ev) {
+          emojiEventoScelta = ev.emoji;
+          document.getElementById("titoloEvento").value = ev.titolo;
+          document.getElementById("dataEvento").value = ev.data;
+          document.getElementById("oraEvento").value = ev.ora || "";
+          document.getElementById("luogoEvento").value = ev.luogo || "";
+        }
+      } else {
+        const sc = schede.find(s => s.id === id);
+        if (sc) {
+          document.getElementById("titoloScheda").value = sc.titolo;
+          
+          const fasiIds = ['corsa', 'stretching', 'coordNoPalla', 'coordPalla', 'esercizi', 'partitella'];
+          fasiIds.forEach((fId, idx) => {
+            document.getElementById(fId).value = sc.fasi[idx].testo;
+            document.getElementById("timer" + fId.charAt(0).toUpperCase() + fId.slice(1)).value = sc.fasi[idx].timer || "";
+          });
+          
+          tagSelezionati = [...sc.tags];
+          immagineBase64 = sc.img;
+          
+          if (sc.img) {
+            document.getElementById("previewScheda").src = sc.img;
+            document.getElementById("previewScheda").style.display = "block";
+          } else {
+            document.getElementById("previewScheda").style.display = "none";
+          }
+        }
+      }
+    } else {
+      document.getElementById("tipoInput").value = "evento";
+      cambiaTipo();
+      document.getElementById("modaleTitolo").textContent = "Nuovo Elemento";
+      document.getElementById("btnSalva").textContent = "Salva";
+      
+      document.getElementById("titoloEvento").value = "";
+      document.getElementById("dataEvento").value = "";
+      document.getElementById("oraEvento").value = "";
+      document.getElementById("luogoEvento").value = "";
+      
+      document.getElementById("titoloScheda").value = "";
+      ['corsa', 'stretching', 'coordNoPalla', 'coordPalla', 'esercizi', 'partitella'].forEach(fId => {
+        document.getElementById(fId).value = "";
+        document.getElementById("timer" + fId.charAt(0).toUpperCase() + fId.slice(1)).value = "";
+      });
+      
+      document.getElementById("imgScheda").value = "";
+      document.getElementById("previewScheda").style.display = "none";
+      immagineBase64 = null;
+      tagSelezionati = [];
+      emojiEventoScelta = "⚽";
+    }
+    
+    document.querySelectorAll("textarea").forEach(ta => ta.style.height = 'auto');
+    renderEmojiPicker();
+    renderTagSelector();
+  }
+
+  function chiudiModale() {
+    document.getElementById("modale").classList.remove("active");
+    idInModifica = null;
+    tipoInModifica = null;
+  }
+
+  function cambiaTipo() {
+    const tipo = document.getElementById("tipoInput").value;
+    document.getElementById("campiEvento").style.display = tipo === "evento" ? "block" : "none";
+    document.getElementById("campiScheda").style.display = tipo === "scheda" ? "block" : "none";
+    if (!idInModifica) {
+      document.getElementById("modaleTitolo").textContent = tipo === "evento" ? "Nuovo Evento" : "Nuova Scheda";
+    }
+  }
+
+  function renderEmojiPicker() {
+    const cont = document.getElementById("pickerEvento");
+    cont.innerHTML = "";
+    EMOJI_EVENTI.forEach(e => {
+      const div = document.createElement("div");
+      div.className = "emoji-opt" + (e === emojiEventoScelta ? " selected" : "");
+      div.textContent = e;
+      div.onclick = () => { emojiEventoScelta = e; renderEmojiPicker(); };
+      cont.appendChild(div);
+    });
+  }
+
+  function renderTagSelector() {
+    const cont = document.getElementById("tagSelector");
+    cont.innerHTML = "";
+    TAG_DISPONIBILI.forEach(tag => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "tag-btn" + (tagSelezionati.includes(tag.nome) ? " selected" : "");
+      btn.innerHTML = `<span>${tag.emoji}</span> ${tag.nome}`;
+      btn.onclick = () => {
+        if (tagSelezionati.includes(tag.nome)) tagSelezionati = tagSelezionati.filter(t => t !== tag.nome);
+        else tagSelezionati.push(tag.nome);
+        renderTagSelector();
+      };
+      cont.appendChild(btn);
+    });
+  }
+
+  function anteprimaImmagine(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      immagineBase64 = e.target.result;
+      const img = document.getElementById("previewScheda");
+      img.src = immagineBase64;
+      img.style.display = "block";
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function salvaElemento() {
+    const tipo = document.getElementById("tipoInput").value;
+    
+    if (tipo === "evento") {
+      const titolo = document.getElementById("titoloEvento").value.trim();
+      const data = document.getElementById("dataEvento").value;
+      if (!titolo || !data) { alert("Inserisci almeno titolo e data."); return; }
+      
+      const evData = { 
+        titolo, data, 
+        ora: document.getElementById("oraEvento").value, 
+        luogo: document.getElementById("luogoEvento").value.trim(), 
+        emoji: emojiEventoScelta 
+      };
+      
+      if (idInModifica) {
+        const idx = eventi.findIndex(e => e.id === idInModifica);
+        if (idx !== -1) eventi[idx] = { ...eventi[idx], ...evData };
+      } else {
+        eventi.push({ id: Date.now(), ...evData });
+      }
+      eventi.sort((a, b) => new Date(a.data + "T" + (a.ora || "00:00")) - new Date(b.data + "T" + (b.ora || "00:00")));
+    } else {
+      const titolo = document.getElementById("titoloScheda").value.trim();
+      if (!titolo) { alert("Inserisci il titolo della scheda."); return; }
+      
+      const fasi = [
+        { nome: "1. Corsa 🏃", colore: "bg-blu", testo: document.getElementById("corsa").value.trim(), emoji: "🏃", timer: parseInt(document.getElementById("timerCorsa").value) || 0 },
+        { nome: "2. Stretching 🧘", colore: "bg-blu", testo: document.getElementById("stretching").value.trim(), emoji: "🧘", timer: parseInt(document.getElementById("timerStretching").value) || 0 },
+        { nome: "3. Coordinazione senza palla 🤸", colore: "bg-verde", testo: document.getElementById("coordNoPalla").value.trim(), emoji: "🤸", timer: parseInt(document.getElementById("timerCoordNoPalla").value) || 0 },
+        { nome: "4. Coordinazione con palla ⚽", colore: "bg-verde", testo: document.getElementById("coordPalla").value.trim(), emoji: "⚽", timer: parseInt(document.getElementById("timerCoordPalla").value) || 0 },
+        { nome: "5. Esercizi col pallone 🎯", colore: "bg-verde", testo: document.getElementById("esercizi").value.trim(), emoji: "🎯", timer: parseInt(document.getElementById("timerEsercizi").value) || 0 },
+        { nome: "6. Partitella 🏆", colore: "bg-rosso", testo: document.getElementById("partitella").value.trim(), emoji: "🏆", timer: parseInt(document.getElementById("timerPartitella").value) || 0 }
+      ];
+
+      const scData = { 
+        titolo, 
+        tags: [...tagSelezionati], 
+        fasi,
+        img: immagineBase64 
+      };
+      
+      if (idInModifica) {
+        const idx = schede.findIndex(s => s.id === idInModifica);
+        if (idx !== -1) schede[idx] = { ...schede[idx], ...scData };
+      } else {
+        schede.push({ id: Date.now(), ...scData });
+      }
+    }
+    save();
+    renderCalendario();
+    renderSchede();
+    chiudiModale();
+  }
+
+  function renderCalendario() {
+    const cont = document.getElementById("listaCalendario");
+    const empty = document.getElementById("emptyCalendario");
+    cont.innerHTML = "";
+    if (eventi.length === 0) { empty.style.display = "block"; return; }
+    empty.style.display = "none";
+    
+    eventi.forEach(ev => {
+      const dataFormattata = new Date(ev.data + "T00:00").toLocaleDateString("it-IT", { weekday: 'long', day: 'numeric', month: 'long' });
+      const div = document.createElement("div");
+      div.className = "card";
+      div.style.cursor = "default";
+      div.innerHTML = `
+        <div class="card-body" style="display:flex; gap:12px; align-items:center; padding:16px;">
+          <div style="font-size:2rem; line-height:1;">${ev.emoji}</div>
+          <div style="flex:1;">
+            <div style="font-weight:700; color:#1a202c; margin-bottom:4px;">${escapeHtml(ev.titolo)}</div>
+            <div style="font-size:0.85rem; color:#4a5568;">📅 ${dataFormattata} ${ev.ora ? "· ⏰ " + ev.ora : ""}</div>
+            ${ev.luogo ? `<div style="font-size:0.85rem; color:#4a5568;">📍 ${escapeHtml(ev.luogo)}</div>` : ""}
+          </div>
+          <div style="display:flex;">
+            <button class="action-btn edit-btn" onclick="apriModale(${ev.id}, 'evento')">✏️</button>
+            <button class="action-btn delete-btn" onclick="eliminaEvento(${ev.id})">🗑️</button>
+          </div>
+        </div>
+      `;
+      cont.appendChild(div);
+    });
+  }
+
+  function renderSchede() {
+    const cont = document.getElementById("listaSchede");
+    const empty = document.getElementById("emptySchede");
+    cont.innerHTML = "";
+    if (schede.length === 0) { empty.style.display = "block"; return; }
+    empty.style.display = "none";
+
+    schede.forEach(sc => {
+      const div = document.createElement("div");
+      div.className = "card";
+      div.id = `scheda-${sc.id}`;
+      
+      div.onclick = (e) => {
+        if (e.target.closest('.action-btn') || e.target.closest('.scheda-actions') || e.target.closest('.btn-timer')) return;
+        div.classList.toggle("open");
+      };
+      
+      let fasiHtml = "";
+      sc.fasi.forEach((fase, idx) => {
+        if (!fase.testo) return;
+        
+        let timerHtml = "";
+        if (fase.timer > 0) {
+          timerHtml = `
+            <div class="timer-wrapper">
+              <button class="btn-timer" id="timer-btn-${sc.id}-${idx}" onclick="event.stopPropagation(); avviaTimerFase(${sc.id}, ${idx}, ${fase.timer})">
+                ▶️ Avvia (${fase.timer} min)
+              </button>
+              <span id="timer-display-${sc.id}-${idx}" style="font-weight:700; color:#e53e3e; font-size:0.9rem;"></span>
+            </div>
+          `;
+        }
+        
+        fasiHtml += `
+          <div class="fase-blocco">
+            <div class="card-header-fase ${fase.colore}">${fase.nome}</div>
+            <div class="step-item" onclick="event.stopPropagation(); toggleStep(${sc.id}, ${idx}, this)">
+              <div class="step-check" id="check-${sc.id}-${idx}"></div>
+              <div class="step-text" id="text-${sc.id}-${idx}">${escapeHtml(fase.testo)}</div>
+            </div>
+            ${timerHtml}
+          </div>
+        `;
+      });
+
+      const tagsHtml = sc.tags.length > 0 ? `<div class="tags-container">${sc.tags.map(t => {
+        const found = TAG_DISPONIBILI.find(td => td.nome === t);
+        return found ? `<div class="tag"><span>${found.emoji}</span> ${found.nome}</div>` : "";
+      }).join("")}</div>` : "";
+
+      div.innerHTML = `
+        <div class="scheda-header">
+          <div class="scheda-info">
+            <div class="scheda-title">${escapeHtml(sc.titolo)}</div>
+            <div class="scheda-sub">Tocca per aprire la scheda</div>
+          </div>
+          <div style="display:flex;">
+            <button class="action-btn edit-btn" onclick="apriModale(${sc.id}, 'scheda')">✏️</button>
+            <button class="action-btn delete-btn" onclick="eliminaScheda(${sc.id})">🗑️</button>
+          </div>
+        </div>
+        
+        <div class="scheda-contenuto">
+          ${sc.img ? `<img src="${sc.img}" style="width:100%; max-height:150px; object-fit:cover; border-radius:8px; margin-top:12px;">` : ""}
+          
+          ${tagsHtml}
+
+          ${fasiHtml}
+
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px;">
+            <button class="btn-small btn-reset" onclick="event.stopPropagation(); resetScheda(${sc.id})">🔄 Resetta Spunte</button>
+          </div>
+        </div>
+
+        <div class="scheda-actions">
+          <button onclick="event.stopPropagation(); duplicaScheda(${sc.id})">📋 Duplica</button>
+          <button onclick="event.stopPropagation(); esportaScheda(${sc.id})">📤 Esporta</button>
+        </div>
+      `;
+      cont.appendChild(div);
+    });
+  }
+
+  // ===== TIMER LOGIC =====
+  const timerAttivi = {};
+
+  function avviaTimerFase(schedaId, faseIdx, minuti) {
+    const btn = document.getElementById(`timer-btn-${schedaId}-${faseIdx}`);
+    const display = document.getElementById(`timer-display-${schedaId}-${faseIdx}`);
+    
+    if (timerAttivi[`${schedaId}-${faseIdx}`]) {
+      clearInterval(timerAttivi[`${schedaId}-${faseIdx}`]);
+      delete timerAttivi[`${schedaId}-${faseIdx}`];
+      btn.textContent = `▶️ Avvia (${minuti} min)`;
+      btn.classList.remove("active");
+      display.textContent = "";
+      return;
+    }
+
+    let secondi = minuti * 60;
+    btn.textContent = `⏹ Stop`;
+    btn.classList.add("active");
+    
+    timerAttivi[`${schedaId}-${faseIdx}`] = setInterval(() => {
+      if (secondi <= 0) {
+        clearInterval(timerAttivi[`${schedaId}-${faseIdx}`]);
+        delete timerAttivi[`${schedaId}-${faseIdx}`];
+        btn.textContent = `▶️ Avvia (${minuti} min)`;
+        btn.classList.remove("active");
+        display.textContent = "Finito!";
+        
+        if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+        return;
+      }
+      secondi--;
+      const m = Math.floor(secondi / 60);
+      const s = secondi % 60;
+      display.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    }, 1000);
+  }
+
+  function toggleStep(id, idx, el) {
+    const check = document.getElementById(`check-${id}-${idx}`);
+    const text = el.querySelector(".step-text");
+    check.classList.toggle("done");
+    text.classList.toggle("done");
+    if (check.classList.contains("done")) check.innerHTML = "✓";
+    else check.innerHTML = "";
+  }
+
+  function resetScheda(id) {
+    const card = document.getElementById(`scheda-${id}`);
+    if (!card) return;
+    
+    card.querySelectorAll('.step-check').forEach(chk => {
+      chk.classList.remove("done");
+      chk.innerHTML = "";
+    });
+    
+    card.querySelectorAll('.step-text').forEach(txt => {
+      txt.classList.remove("done");
+    });
+  }
+
+  function duplicaScheda(id) {
+    const scheda = schede.find(s => s.id === id);
+    if (!scheda) return;
+    const copia = JSON.parse(JSON.stringify(scheda));
+    copia.id = Date.now();
+    copia.titolo = copia.titolo + " (Copia)";
+    schede.push(copia);
+    save();
+    renderSchede();
+  }
+
+  function esportaScheda(id) {
+    const scheda = schede.find(s => s.id === id);
+    if (!scheda) return;
+    let testo = `SCHEDA: ${scheda.titolo}\n\n`;
+    scheda.fasi.forEach(fase => {
+      if (fase.testo) {
+        testo += `${fase.nome}\n`;
+        if (fase.timer) testo += `(Timer: ${fase.timer} min)\n`;
+        testo += `- ${fase.testo}\n\n`;
+      }
+    });
+    const blob = new Blob([testo], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Scheda_${scheda.titolo.replace(/ /g, "_")}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function eliminaEvento(id) {
+    if (!confirm("Eliminare questo evento?")) return;
+    eventi = eventi.filter(e => e.id !== id);
+    save(); renderCalendario();
+  }
+
+  function eliminaScheda(id) {
+    if (!confirm("Eliminare questa scheda?")) return;
+    schede = schede.filter(s => s.id !== id);
+    save(); renderSchede();
+  }
+
+  function escapeHtml(s) {
+    return s.replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+  }
+
+  document.querySelectorAll("textarea").forEach(textarea => {
+    textarea.addEventListener("input", function() { autoResize(this); });
+  });
+
+  renderCalendario();
+  renderSchede();
+</script>
+</body>
+</html>

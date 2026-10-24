@@ -1,0 +1,20 @@
+{
+  "name": "Samba Coach Planner",
+  "short_name": "Samba",
+  "description": "Organizza allenamenti e schede per la squadra Samba",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#2b6cb0",
+  "theme_color": "#2b6cb0",
+  "lang": "it",
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
